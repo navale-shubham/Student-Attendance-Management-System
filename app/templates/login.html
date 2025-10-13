@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Login - ATS{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-12 px-8">
+    <div class="bg-white border border-gray-200 rounded-2xl p-10 shadow-lg">
+        <h2 class="text-3xl mb-2 text-center font-bold">Welcome Back</h2>
+        <p class="text-gray-600 text-center mb-8">Sign in to your account to continue</p>
+        <form id="loginForm">
+            <div class="mb-5">
+                <label for="loginEmail" class="block mb-2 text-gray-600 font-semibold">Email</label>
+                <input type="email" id="loginEmail" name="userEmail"
+                    class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    required>
+            </div>
+            <div class="mb-5">
+                <label for="loginPassword" class="block mb-2 text-gray-600 font-semibold">Password</label>
+                <input type="password" id="loginPassword" name="password"
+                    class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    required>
+            </div>
+            <button type="submit" id="loginBtn"
+                class="w-full py-3.5 bg-blue-500 text-white rounded-lg font-semibold transition-all hover:bg-blue-700">Sign
+                In</button>
+        </form>
+        <div id="loginMessage" class="mt-4 text-center hidden"></div>
+        <div class="mt-6 text-center text-gray-600">
+            Don't have an account? <a href="{{ url_for('auth_bp.register') }}"
+                class="text-blue-500 font-semibold">Register here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const userEmail = formData.get('userEmail').trim();
+        const password = formData.get('password');
+
+        if (!userEmail) {
+            showMessage('Please enter your email.', 'error');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userEmail)) {
+            showMessage('Please enter a valid email address.', 'error');
+            return;
+        }
+
+        if (!password) {
+            showMessage('Please enter a valid email address password.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('loginBtn');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Signing In...';
+
+        try {
+            const response = await fetch('{{ url_for("auth_bp.login") }}', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showMessage(data.message || 'Login successful! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = '{{ url_for("dashboard_bp.dashboard") }}';
+                }, 1500);
+            } else {
+                showMessage(data.message || 'Login failed. Please try again.', 'error');
+            }
+        } catch (error) {
+            showMessage('Network error. Please check your connection and try again.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    });
+
+    function showMessage(message, type) {
+        const messageEl = document.getElementById('loginMessage');
+        messageEl.textContent = message;
+        messageEl.className = `mt-4 text-center ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+        messageEl.classList.remove('hidden');
+        setTimeout(() => {
+            messageEl.classList.add('hidden');
+        }, 5000);
+    }
+</script>
+{% endblock %}
