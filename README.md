@@ -1,4 +1,4 @@
-# DBMSL Project: Student Attendance Management System
+# Student Attendance Management System
 
 A full-stack Flask web application for managing student batches, tracking attendance, and visualizing average attendance metrics.
 
